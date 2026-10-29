@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a2b">
+    <meta name="description" content="Journal de trading privé et hors ligne : suivez vos trades et calculez le risque selon la méthode des 3S.">
+    <meta name="application-name" content="Journal 3S">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Journal 3S">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <title>Journal de trading — Méthode des 3S</title>
+    <link rel="stylesheet" href="trading-journal.css">
+    <script src="trading-journal.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Journal de trading, accueil">
+        <span class="brand-mark">3S</span>
+        <span>Journal de trading</span>
+      </a>
+      <div class="topbar-actions">
+        <button id="install-app" class="install-button" type="button" hidden>Installer l’application</button>
+        <span class="local-badge"><span aria-hidden="true"></span> Données conservées sur ce PC</span>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="intro">
+        <p class="eyebrow">SYSTÈME · SÉCURITÉ · SÉRÉNITÉ</p>
+        <h1>Votre journal, sans prise de tête.</h1>
+        <p>Préparez le risque avant le trade, consignez vos décisions, puis tirez-en des enseignements.</p>
+        <div id="install-help" class="install-help" role="status">
+          Pour installer l’application, ouvrez son adresse <strong>https://</strong> dans Chrome ou Edge, puis cliquez sur « Installer l’application » ou utilisez l’icône d’installation dans la barre d’adresse. Un fichier local ne peut pas être installé comme application.
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Résumé du journal">
+        <article class="stat-card">
+          <span class="stat-label">Trades consignés</span>
+          <strong id="stat-count">0</strong>
+          <span class="stat-note">dans votre journal</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Résultat cumulé</span>
+          <strong id="stat-total">0 R</strong>
+          <span class="stat-note">somme des résultats saisis</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Plan respecté</span>
+          <strong id="stat-plan">—</strong>
+          <span class="stat-note">part des trades conformes</span>
+        </article>
+      </section>
+
+      <section class="panel calculator" aria-labelledby="calculator-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">AVANT LE TRADE</p>
+            <h2 id="calculator-title">Calculer la taille de position</h2>
+          </div>
+          <span class="step-badge">01</span>
+        </div>
+        <p class="section-copy">Le stop détermine la distance ; la distance et la valeur du point déterminent la taille.</p>
+
+        <form id="calculator-form" novalidate>
+          <div class="field-grid calculator-grid">
+            <label class="field">
+              <span>Capital du compte</span>
+              <input id="calc-capital" type="number" min="0" step="any" placeholder="Ex. 5 000" required>
+            </label>
+            <label class="field">
+              <span>Risque par trade (%)</span>
+              <input id="calc-risk-percent" type="number" min="0.01" max="1" step="any" value="0.5" required>
+              <small>Débutant : le livre recommande 0,25 à 0,5 %.</small>
+            </label>
+            <label class="field">
+              <span>Prix d’entrée</span>
+              <input id="calc-entry" type="number" step="any" placeholder="Ex. 1.0850" required>
+            </label>
+            <label class="field">
+              <span>Prix du stop</span>
+              <input id="calc-stop" type="number" step="any" placeholder="Ex. 1.0825" required>
+            </label>
+            <label class="field">
+              <span>Taille d’un point / pip</span>
+              <input id="calc-point-size" type="number" min="0" step="any" placeholder="Ex. 0.0001" required>
+              <small>Ex. 0,0001 pour un pip EUR/USD ; vérifiez l’instrument.</small>
+            </label>
+            <label class="field">
+              <span>Valeur d’un point par lot</span>
+              <input id="calc-point-value" type="number" min="0" step="any" placeholder="Dans la devise du compte" required>
+              <small>À vérifier auprès de votre courtier.</small>
+            </label>
+          </div>
+          <div class="calculator-actions">
+            <button class="button button-primary" type="submit">Calculer ma taille</button>
+            <p class="fine-print">Estimation hors spread, commissions, glissement et règles d’arrondi du courtier.</p>
+          </div>
+        </form>
+
+        <div id="calculator-result" class="calc-result" aria-live="polite" hidden>
+          <div>
+            <span class="result-label">Montant risqué</span>
+            <strong id="result-risk">—</strong>
+          </div>
+          <div>
+            <span class="result-label">Distance au stop</span>
+            <strong id="result-distance">—</strong>
+          </div>
+          <div>
+            <span class="result-label">Taille estimée</span>
+            <strong id="result-size">—</strong>
+          </div>
+          <button id="apply-calculation" class="button button-secondary" type="button">Utiliser dans le journal</button>
+        </div>
+        <p id="calculator-error" class="error-message" role="alert" hidden></p>
+      </section>
+
+      <section class="panel journal-panel" aria-labelledby="journal-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">APRÈS LE TRADE</p>
+            <h2 id="journal-title">Consigner un trade</h2>
+          </div>
+          <span class="step-badge">02</span>
+        </div>
+        <p class="section-copy">Notez aussi les pertes et les trades hors plan : ils font partie de l’apprentissage.</p>
+
+        <form id="trade-form" novalidate>
+          <input id="trade-id" type="hidden">
+          <div class="field-grid trade-grid">
+            <label class="field">
+              <span>Date</span>
+              <input id="trade-date" type="date" required>
+            </label>
+            <label class="field">
+              <span>Actif</span>
+              <input id="trade-asset" type="text" maxlength="40" placeholder="Ex. EUR/USD, XAU/USD" required>
+            </label>
+            <label class="field">
+              <span>Setup</span>
+              <input id="trade-setup" type="text" maxlength="60" placeholder="Ex. Break & Retest" required>
+            </label>
+            <label class="field">
+              <span>Entrée</span>
+              <input id="trade-entry" type="number" step="any" required>
+            </label>
+            <label class="field">
+              <span>Stop</span>
+              <input id="trade-stop" type="number" step="any" required>
+            </label>
+            <label class="field">
+              <span>Objectif</span>
+              <input id="trade-target" type="number" step="any" required>
+            </label>
+            <label class="field">
+              <span>Taille de position</span>
+              <input id="trade-size" type="number" min="0" step="any" placeholder="Lots ou unités" required>
+            </label>
+            <label class="field">
+              <span>Montant risqué</span>
+              <input id="trade-risk-amount" type="number" min="0" step="any" placeholder="Dans la devise du compte" required>
+            </label>
+            <label class="field">
+              <span>Risque du compte (%)</span>
+              <input id="trade-risk-percent" type="number" min="0" step="any" placeholder="Ex. 0.5" required>
+            </label>
+            <label class="field">
+              <span>Résultat (R)</span>
+              <input id="trade-result" type="number" step="any" placeholder="Ex. 2 ou -1" required>
+              <small>Gain : valeur positive ; perte : valeur négative.</small>
+            </label>
+            <label class="field">
+              <span>Plan respecté ?</span>
+              <select id="trade-plan" required>
+                <option value="yes">Oui</option>
+                <option value="no">Non</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Émotion</span>
+              <select id="trade-emotion" required>
+                <option value="Serein">Serein</option>
+                <option value="Confiant">Confiant</option>
+                <option value="Neutre">Neutre</option>
+                <option value="Hésitant">Hésitant</option>
+                <option value="Stressé">Stressé</option>
+                <option value="FOMO">FOMO</option>
+                <option value="Frustré">Frustré</option>
+              </select>
+            </label>
+            <label class="field field-wide">
+              <span>Lien ou chemin de la capture d’écran <span class="optional">(facultatif)</span></span>
+              <input id="trade-screenshot" type="text" maxlength="500" placeholder="Ex. C:\Trading\captures\trade-01.png ou https://…">
+            </label>
+          </div>
+          <div class="form-actions">
+            <button id="save-trade" class="button button-primary" type="submit">Ajouter au journal</button>
+            <button id="cancel-edit" class="button button-quiet" type="button" hidden>Annuler la modification</button>
+            <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel history-panel" aria-labelledby="history-title">
+        <div class="history-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">VOTRE SUIVI</p>
+              <h2 id="history-title">Historique des trades</h2>
+            </div>
+            <span class="step-badge">03</span>
+          </div>
+          <button id="export-csv" class="button button-secondary" type="button">Exporter en CSV</button>
+        </div>
+        <p id="storage-error" class="error-message" role="alert" hidden></p>
+        <div id="empty-state" class="empty-state">
+          <span class="empty-icon" aria-hidden="true">↗</span>
+          <strong>Votre journal commence ici</strong>
+          <span>Ajoutez votre premier trade pour suivre vos décisions en R.</span>
+        </div>
+        <div id="trade-list" class="trade-list" aria-live="polite"></div>
+        <p class="privacy-note">Les données restent dans le stockage local de ce navigateur. Exportez régulièrement votre journal pour en garder une sauvegarde.</p>
+      </section>
+
+      <aside class="disclaimer">
+        <strong>Un calcul indicatif, pas une recommandation financière.</strong>
+        <span>La valeur du pip/point, la taille du contrat et les frais varient selon le marché et le courtier. Vérifiez-les avant tout ordre. Aucun outil ne garantit un résultat de trading.</span>
+      </aside>
+    </main>
+    <footer>Journal de trading 3S <span>·</span> Fonctionne hors ligne</footer>
+  </body>
+</html>
