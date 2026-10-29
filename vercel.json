@@ -1,0 +1,19 @@
+{
+  "buildCommand": "mkdir -p dist/icons && cp trading-journal.html trading-journal.css trading-journal.js manifest.webmanifest service-worker.js dist/ && cp icons/icon.svg icons/icon-192.png icons/icon-512.png dist/icons/",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=UTF-8" }
+      ]
+    }
+  ]
+}
